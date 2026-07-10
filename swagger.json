@@ -1,1 +1,611 @@
-{}
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "UMT Backend API",
+    "version": "1.0.0",
+    "description": "Backend API for managing bouquets (products), orders, and feedback"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Server health check",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bouquets": {
+      "get": {
+        "summary": "Get paginated bouquets (products) list",
+        "description": "Returns one page of bouquets from the database. Use `page` and `per-page` to control pagination.",
+        "tags": ["Bouquets"],
+        "parameters": [
+          { "$ref": "#/components/parameters/PageParam" },
+          { "$ref": "#/components/parameters/PerPageParam" },
+          { "$ref": "#/components/parameters/CategoryParam" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated bouquet list with data and meta",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedBouquetResponse" },
+                "example": {
+                  "data": [
+                    {
+                      "id": "1",
+                      "img": "https://ftp.goit.study/img/flowers/68498236a1003120786.png",
+                      "title": "Midnight Garden",
+                      "desc": "A spellbinding bouquet of indigo delphiniums, silvery moonlit eucalyptus, and deep violet lisianthus.",
+                      "price": "98",
+                      "category": "top"
+                    }
+                  ],
+                  "meta": {
+                    "first": 1,
+                    "prev": null,
+                    "next": 2,
+                    "last": 9,
+                    "pages": 9,
+                    "items": 101
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new bouquet",
+        "tags": ["Bouquets"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "picture": { "type": "string", "format": "binary", "description": "Image file (max 6 MB)" },
+                  "title": { "type": "string", "example": "Midnight Garden" },
+                  "desc": {
+                    "type": "string",
+                    "example": "A spellbinding bouquet of indigo delphiniums, silvery moonlit eucalyptus, and deep violet lisianthus."
+                  },
+                  "price": { "type": "string", "example": "98" },
+                  "category": { "type": "string", "enum": ["standart", "top"], "example": "top" }
+                },
+                "required": ["picture", "title", "desc", "price", "category"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bouquet created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Букет успішно створено" },
+                    "bouquet": { "$ref": "#/components/schemas/Bouquet" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/bouquets/{id}": {
+      "get": {
+        "summary": "Get bouquet by id",
+        "tags": ["Bouquets"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Bouquet item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Bouquet" }
+              }
+            }
+          },
+          "404": { "description": "Bouquet not found" }
+        }
+      },
+      "patch": {
+        "summary": "Partially update bouquet by id",
+        "tags": ["Bouquets"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "picture": { "type": "string", "format": "binary", "description": "New image file (max 6 MB)" },
+                  "title": { "type": "string" },
+                  "desc": { "type": "string" },
+                  "price": { "type": "string" },
+                  "category": { "type": "string", "enum": ["standart", "top"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bouquet updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Букет успішно оновлено" },
+                    "bouquet": { "$ref": "#/components/schemas/Bouquet" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "404": { "description": "Bouquet not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete bouquet by id",
+        "tags": ["Bouquets"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Bouquet deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Букет успішно видалено" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Bouquet not found" }
+        }
+      }
+    },
+    "/api/feedbacks": {
+      "get": {
+        "summary": "Get all feedback entries",
+        "tags": ["Feedback"],
+        "responses": {
+          "200": {
+            "description": "Array of feedback items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feedback" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new feedback",
+        "tags": ["Feedback"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FeedbackInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feedback created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Відгук успішно створено" },
+                    "feedback": { "$ref": "#/components/schemas/Feedback" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/feedbacks/{id}": {
+      "get": {
+        "summary": "Get feedback by id",
+        "tags": ["Feedback"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Feedback item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Feedback" }
+              }
+            }
+          },
+          "404": { "description": "Feedback not found" }
+        }
+      },
+      "patch": {
+        "summary": "Partially update feedback by id",
+        "tags": ["Feedback"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FeedbackUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Відгук успішно оновлено" },
+                    "feedback": { "$ref": "#/components/schemas/Feedback" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "404": { "description": "Feedback not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete feedback by id",
+        "tags": ["Feedback"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Feedback deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Відгук успішно видалено" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Feedback not found" }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "summary": "Get all orders",
+        "tags": ["Order"],
+        "responses": {
+          "200": {
+            "description": "Array of order items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Order" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new order",
+        "tags": ["Order"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Замовлення успішно створено" },
+                    "order": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "summary": "Get order by id",
+        "tags": ["Order"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Order item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Order" }
+              }
+            }
+          },
+          "404": { "description": "Order not found" }
+        }
+      },
+      "patch": {
+        "summary": "Partially update order by id",
+        "tags": ["Order"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Замовлення успішно оновлено" },
+                    "order": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "404": { "description": "Order not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete order by id",
+        "tags": ["Order"],
+        "parameters": [{ "$ref": "#/components/parameters/IdParam" }],
+        "responses": {
+          "200": {
+            "description": "Order deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Замовлення успішно видалено" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Order not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IdParam": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "minimum": 1 },
+        "description": "Resource id"
+      },
+      "PageParam": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Page number (1-based)",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "example": 1
+        }
+      },
+      "PerPageParam": {
+        "name": "per-page",
+        "in": "query",
+        "required": false,
+        "description": "Number of products per page",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 12,
+          "example": 12
+        }
+      },
+      "CategoryParam": {
+        "name": "category",
+        "in": "query",
+        "required": false,
+        "description": "Filter products by category. Omit to return all categories.",
+        "schema": {
+          "type": "string",
+          "enum": ["standart", "top"],
+          "example": "standart"
+        }
+      }
+    },
+    "schemas": {
+      "Bouquet": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "1" },
+          "img": { "type": "string", "format": "uri" },
+          "title": { "type": "string" },
+          "desc": { "type": "string" },
+          "price": { "type": "string", "example": "98" },
+          "category": { "type": "string", "enum": ["standart", "top"] }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "first": { "type": "integer", "example": 1 },
+          "prev": { "type": ["integer", "null"], "example": null },
+          "next": { "type": ["integer", "null"], "example": 2 },
+          "last": { "type": "integer", "example": 9 },
+          "pages": { "type": "integer", "example": 9 },
+          "items": { "type": "integer", "example": 101, "description": "Total number of products matching the filter" }
+        }
+      },
+      "PaginatedBouquetResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Bouquet" }
+          },
+          "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      },
+      "BouquetInput": {
+        "type": "object",
+        "required": ["picture", "title", "desc", "price", "category"],
+        "properties": {
+          "picture": { "type": "string", "format": "binary" },
+          "title": { "type": "string", "example": "Midnight Garden" },
+          "desc": { "type": "string", "example": "A spellbinding bouquet of indigo delphiniums..." },
+          "price": { "type": "string", "example": "98" },
+          "category": { "type": "string", "enum": ["standart", "top"], "example": "top" }
+        }
+      },
+      "BouquetUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "picture": { "type": "string", "format": "binary" },
+          "title": { "type": "string" },
+          "desc": { "type": "string" },
+          "price": { "type": "string" },
+          "category": { "type": "string", "enum": ["standart", "top"] }
+        }
+      },
+      "Feedback": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "text": { "type": "string", "example": "Amazing flowers and fast delivery!" },
+          "author": { "type": "string", "example": "John Doe" }
+        }
+      },
+      "FeedbackInput": {
+        "type": "object",
+        "required": ["text", "author"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 2000,
+            "example": "Amazing flowers and fast delivery!"
+          },
+          "author": { "type": "string", "minLength": 2, "maxLength": 100, "example": "John Doe" }
+        }
+      },
+      "FeedbackUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "text": { "type": "string", "minLength": 10, "maxLength": 2000 },
+          "author": { "type": "string", "minLength": 2, "maxLength": 100 }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Jane Smith" },
+          "phone": { "type": "string", "example": "+1234567890" },
+          "address": { "type": "string", "example": "123 Main St, City, State 12345" },
+          "comment": { "type": "string", "example": "Please deliver in the morning" },
+          "productId": { "type": ["integer", "null"], "example": 1 },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2024-01-15T10:30:00.000Z" }
+        }
+      },
+      "OrderInput": {
+        "type": "object",
+        "required": ["name", "phone", "address"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 100, "example": "Jane Smith" },
+          "phone": { "type": "string", "minLength": 10, "maxLength": 30, "example": "+1234567890" },
+          "address": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 200,
+            "example": "123 Main St, City, State 12345"
+          },
+          "comment": { "type": "string", "maxLength": 500, "example": "Please deliver in the morning" },
+          "productId": {
+            "type": ["integer", "null"],
+            "example": 1,
+            "description": "Product id when ordering specific bouquet; null for general orders"
+          }
+        }
+      },
+      "OrderUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "phone": { "type": "string", "minLength": 10, "maxLength": 30 },
+          "address": { "type": "string", "minLength": 5, "maxLength": 200 },
+          "comment": { "type": "string", "maxLength": 500 },
+          "productId": { "type": ["integer", "null"] }
+        }
+      }
+    }
+  }
+}
