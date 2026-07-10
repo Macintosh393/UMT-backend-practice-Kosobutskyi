@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: umt-backend-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: umt
+      POSTGRES_PASSWORD: umt
+      POSTGRES_DB: umt_backend
+    volumes:
+      - umt_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umt -d umt_backend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  umt_postgres_data:

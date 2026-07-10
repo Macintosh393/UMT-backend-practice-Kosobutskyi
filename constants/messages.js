@@ -1,0 +1,31 @@
+export const commonJoiMessages = {
+  "any.required": "{#label} обов'язкове для заповнення",
+  "string.empty": "{#label} не може бути порожнім",
+  "string.min": "{#label} має містити не менше {#limit} символів",
+  "string.max": "{#label} має містити не більше {#limit} символів",
+  "number.base": "{#label} має бути числом",
+  "number.min": "{#label} має бути не менше {#limit}",
+  "number.max": "{#label} має бути не більше {#limit}",
+  "number.integer": "{#label} має бути цілим числом",
+  "any.only": "Некоректне значення поля {#label}",
+};
+
+export const apiMessages = {
+  notFound: "Маршрут не знайдено",
+  serverError: "Сталася помилка на сервері. Спробуйте пізніше",
+  bouquetNotFound: "Букет не знайдено",
+  orderNotFound: "Замовлення не знайдено",
+  feedbackNotFound: "Відгук не знайдено",
+  bouquetImageRequired: "Зображення обов'язкове для завантаження",
+  fileSizeLimitExceeded: "Розмір файлу не може перевищувати 6 Мбайт",
+  bouquetUpdateEmpty: "Потрібно передати хоча б одне поле або зображення",
+  bouquetCreated: "Букет успішно створено",
+  bouquetUpdated: "Букет успішно оновлено",
+  bouquetDeleted: "Букет успішно видалено",
+  orderCreated: "Замовлення успішно створено",
+  orderUpdated: "Замовлення успішно оновлено",
+  orderDeleted: "Замовлення успішно видалено",
+  feedbackCreated: "Відгук успішно створено",
+  feedbackUpdated: "Відгук успішно оновлено",
+  feedbackDeleted: "Відгук успішно видалено",
+};
